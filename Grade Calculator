@@ -1,0 +1,69 @@
+import java.util.Scanner;
+public class GradeCalculator {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Enter the number of subjects: ");
+        int Subjects = scanner.nextInt();
+
+        int[] marks = new int[Subjects];
+        for (int i = 0; i < Subjects; i++) {
+            System.out.print("Marks obtained in subject " + (i + 1)+" (out of 100) : ");
+            marks[i] = scanner.nextInt();
+            if(marks[i] < 0 || marks[i] > 100){
+                System.out.println("Invalid marks entered.");
+                return; 
+            }
+        }
+
+        int tot = TotalMarks(marks);
+
+        double avg = AveragePercentage(tot,Subjects);
+
+        String grade = Grade(avg);
+
+        displayResults(tot, avg, grade);
+
+        scanner.close();
+    }
+
+    public static int TotalMarks(int[] marks) {
+        int total = 0;
+        for (int mark : marks) {
+            total += mark;
+        }
+        return total;
+    }
+
+    public static double AveragePercentage(int tot, int Subjects) {
+        if (Subjects == 0) {
+            return 0.0; 
+        }
+        return (double) tot / Subjects;
+    }
+
+    public static String Grade(double avg) {
+        if (avg >= 90) {
+            return "A+";
+        } else if (avg >= 80) {
+            return "A";
+        } else if (avg >= 70) {
+            return "B";
+        } else if (avg >= 60) {
+            return "C";
+        } else if (avg >= 50) {
+            return "D";
+        } else {
+            return "F";
+        }
+    }
+
+    // Method to display results
+    public static void displayResults(int tot, double avg, String grade) {
+        System.out.println("----------------------------------");
+        System.out.println("Total Marks: " + tot);
+        System.out.println("Average Percentage: "+ avg); 
+        System.out.println("Grade: " + grade);
+    }
+}
+
