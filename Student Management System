@@ -1,0 +1,189 @@
+import java.io.*;
+import java.util.*;
+
+class Student implements Serializable {
+    private String name;
+    private int rollNumber;
+    private String grade;
+
+    public Student(String name, int rollNumber, String grade) {
+        this.name = name;
+        this.rollNumber = rollNumber;
+        this.grade = grade;
+    }
+
+    public String getName() { return name; }
+    public int getRollNumber() { return rollNumber; }
+    public String getGrade() { return grade; }
+
+    public void setName(String name) { this.name = name; }
+    public void setGrade(String grade) { this.grade = grade; }
+
+    @Override
+    public String toString() {
+        return "Roll No: " + rollNumber + ", Name: " + name + ", Grade: " + grade;
+    }
+}
+
+class StudentManagementSystem {
+    private List<Student> students = new ArrayList<>();
+    private static final String FILE_NAME = "students.dat";
+
+    public StudentManagementSystem() {
+        loadFromFile();
+    }
+
+    public void addStudent(Student student) {
+        students.add(student);
+        saveToFile();
+    }
+
+    public boolean removeStudent(int rollNumber) {
+        boolean removed = students.removeIf(s -> s.getRollNumber() == rollNumber);
+        if (removed) saveToFile();
+        return removed;
+    }
+
+    public Student searchStudent(int rollNumber) {
+        return students.stream()
+                .filter(s -> s.getRollNumber() == rollNumber)
+                .findFirst().orElse(null);
+    }
+
+    public List<Student> getAllStudents() {
+        return students;
+    }
+
+    public boolean editStudent(int rollNumber, String newName, String newGrade) {
+        Student s = searchStudent(rollNumber);
+        if (s != null) {
+            if (!newName.isEmpty()) s.setName(newName);
+            if (!newGrade.isEmpty()) s.setGrade(newGrade);
+            saveToFile();
+            return true;
+        }
+        return false;
+    }
+
+    private void saveToFile() {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(FILE_NAME))) {
+            oos.writeObject(students);
+        } catch (IOException e) {
+            System.out.println("Error saving to file: " + e.getMessage());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void loadFromFile() {
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(FILE_NAME))) {
+            students = (List<Student>) ois.readObject();
+        } catch (Exception e) {
+            students = new ArrayList<>();
+        }
+    }
+}
+
+public class Main {
+    private static final Scanner scanner = new Scanner(System.in);
+    private static final StudentManagementSystem sms = new StudentManagementSystem();
+
+    public static void main(String[] args) {
+        int choice;
+        do {
+            displayMenu();
+            choice = readInt("Enter choice: ");
+            switch (choice) {
+                case 1 -> addStudent();
+                case 2 -> removeStudent();
+                case 3 -> editStudent();
+                case 4 -> searchStudent();
+                case 5 -> displayAllStudents();
+                case 6 -> System.out.println("Exiting system...");
+                default -> System.out.println("Invalid option.");
+            }
+        } while (choice != 6);
+    }
+
+    private static void displayMenu() {
+        System.out.println("\n--- Student Management System ---");
+        System.out.println("1. Add Student");
+        System.out.println("2. Remove Student");
+        System.out.println("3. Edit Student");
+        System.out.println("4. Search Student");
+        System.out.println("5. Display All Students");
+        System.out.println("6. Exit");
+    }
+
+    private static void addStudent() {
+        System.out.print("Enter Name: ");
+        String name = scanner.nextLine();
+        int rollNumber = readInt("Enter Roll Number: ");
+        System.out.print("Enter Grade: ");
+        String grade = scanner.nextLine();
+
+        if (name.isEmpty() || grade.isEmpty()) {
+            System.out.println("Name and grade cannot be empty.");
+            return;
+        }
+
+        sms.addStudent(new Student(name, rollNumber, grade));
+        System.out.println("Student added successfully.");
+    }
+
+    private static void removeStudent() {
+        int roll = readInt("Enter Roll Number to remove: ");
+        if (sms.removeStudent(roll)) {
+            System.out.println("Student removed.");
+        } else {
+            System.out.println("Student not found.");
+        }
+    }
+
+    private static void editStudent() {
+        int roll = readInt("Enter Roll Number to edit: ");
+        Student s = sms.searchStudent(roll);
+        if (s == null) {
+            System.out.println("Student not found.");
+            return;
+        }
+
+        System.out.print("Enter new name (leave blank to keep same): ");
+        String name = scanner.nextLine();
+        System.out.print("Enter new grade (leave blank to keep same): ");
+        String grade = scanner.nextLine();
+
+        if (sms.editStudent(roll, name, grade)) {
+            System.out.println("Student updated.");
+        }
+    }
+
+    private static void searchStudent() {
+        int roll = readInt("Enter Roll Number to search: ");
+        Student s = sms.searchStudent(roll);
+        if (s != null) {
+            System.out.println("Student found: " + s);
+        } else {
+            System.out.println("Student not found.");
+        }
+    }
+
+    private static void displayAllStudents() {
+        List<Student> all = sms.getAllStudents();
+        if (all.isEmpty()) {
+            System.out.println("No students available.");
+        } else {
+            all.forEach(System.out::println);
+        }
+    }
+
+    private static int readInt(String prompt) {
+        while (true) {
+            try {
+                System.out.print(prompt);
+                return Integer.parseInt(scanner.nextLine().trim());
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid number, try again.");
+            }
+        }
+    }
+}
